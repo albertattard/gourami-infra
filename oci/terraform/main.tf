@@ -199,44 +199,47 @@ resource "oci_apigateway_gateway" "this" {
 }
 
 resource "oci_apigateway_deployment" "website" {
-  display_name   = "Gourami Website Deployment"
+  display_name   = "Gourami Web Application Deployment"
   compartment_id = var.compartment_id
   gateway_id     = oci_apigateway_gateway.this.id
   path_prefix    = "/"
 
   specification {
-    routes {
-      backend {
-        type = "HTTP_BACKEND"
-        url  = "https://objectstorage.${var.region}.oraclecloud.com/n/${oci_objectstorage_bucket.website.namespace}/b/${oci_objectstorage_bucket.website.name}/o/$${request.path[object]}"
+
+    logging_policies {
+      access_log {
+        is_enabled = true
       }
-      path    = "/{object*}"
-      methods = ["GET"]
     }
-  }
 
-  defined_tags  = var.defined_tags
-  freeform_tags = var.freeform_tags
-
-  lifecycle {
-    ignore_changes = [defined_tags]
-  }
-}
-
-resource "oci_apigateway_deployment" "app" {
-  display_name   = "Gourami Web Application Deployment"
-  compartment_id = var.compartment_id
-  gateway_id     = oci_apigateway_gateway.this.id
-  path_prefix    = "/api"
-
-  specification {
     routes {
       backend {
-        type = "HTTP_BACKEND"
-        url  = "http://gouramiapp.public.gourami.oraclevcn.com:8080/$${request.path[object]}"
+        type                       = "HTTP_BACKEND"
+        url                        = "http://gouramiapp.public.gourami.oraclevcn.com:8080/$${request.path[path]}"
+        connect_timeout_in_seconds = 2
+      }
+      path    = "/api/{path*}"
+      methods = ["GET", "POST", "PUT", "HEAD"]
+    }
+
+    routes {
+      backend {
+        type                       = "HTTP_BACKEND"
+        url                        = "https://${oci_objectstorage_bucket.website.namespace}.objectstorage.${var.region}.oci.customer-oci.com/n/${oci_objectstorage_bucket.website.namespace}/b/${oci_objectstorage_bucket.website.name}/o/index.html"
+        connect_timeout_in_seconds = 2
+      }
+      path    = "/"
+      methods = ["GET", "HEAD"]
+    }
+
+    routes {
+      backend {
+        type                       = "HTTP_BACKEND"
+        url                        = "https://${oci_objectstorage_bucket.website.namespace}.objectstorage.${var.region}.oci.customer-oci.com/n/${oci_objectstorage_bucket.website.namespace}/b/${oci_objectstorage_bucket.website.name}/o/$${request.path[object]}"
+        connect_timeout_in_seconds = 2
       }
       path    = "/{object*}"
-      methods = ["GET", "POST", "PUT", "HEAD"]
+      methods = ["GET", "HEAD"]
     }
   }
 
