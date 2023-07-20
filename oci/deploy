@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -e
+
+terraform -chdir=terraform init
+terraform -chdir=terraform fmt
+terraform -chdir=terraform apply -auto-approve
