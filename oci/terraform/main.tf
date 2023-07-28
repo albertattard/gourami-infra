@@ -80,6 +80,17 @@ resource "oci_core_default_security_list" "this" {
   }
 
   ingress_security_rules {
+    description = "Allow HTTP from the anywhere (without this cannot HTTP to the website)"
+    protocol    = "6"
+    source      = "0.0.0.0/0"
+
+    tcp_options {
+      min = 8080
+      max = 8080
+    }
+  }
+
+  ingress_security_rules {
     description = "Allow HTTPS from the anywhere (without this cannot HTTPS to the website)"
     protocol    = "6"
     source      = "0.0.0.0/0"
@@ -150,7 +161,7 @@ resource "oci_container_instances_container_instance" "app" {
 
   containers {
     display_name = "Gourami Web Application Container"
-    image_url    = "albertattard/gourami-app:main"
+    image_url    = "albertattard/gourami-app:latest"
 
     health_checks {
       name                     = "Demo HTTP Health Check"
@@ -198,6 +209,10 @@ resource "oci_apigateway_gateway" "this" {
   }
 }
 
+locals {
+  bucket_url = "https://${oci_objectstorage_bucket.website.namespace}.objectstorage.${var.region}.oci.customer-oci.com/n/${oci_objectstorage_bucket.website.namespace}/b/${oci_objectstorage_bucket.website.name}"
+}
+
 resource "oci_apigateway_deployment" "website" {
   display_name   = "Gourami Web Application Deployment"
   compartment_id = var.compartment_id
@@ -222,20 +237,30 @@ resource "oci_apigateway_deployment" "website" {
       methods = ["GET", "POST", "PUT", "HEAD"]
     }
 
+    # routes {
+    #   backend {
+    #     type                       = "HTTP_BACKEND"
+    #     url                        = "${local.bucket_url}/o/$${request.path[object]}"
+    #     connect_timeout_in_seconds = 2
+    #   }
+    #   path    = "/{object*}"
+    #   methods = ["GET", "HEAD"]
+    # }
+
     routes {
       backend {
         type                       = "HTTP_BACKEND"
-        url                        = "https://${oci_objectstorage_bucket.website.namespace}.objectstorage.${var.region}.oci.customer-oci.com/n/${oci_objectstorage_bucket.website.namespace}/b/${oci_objectstorage_bucket.website.name}/o/index.html"
+        url                        = "${local.bucket_url}/o/static/$${request.path[object]}"
         connect_timeout_in_seconds = 2
       }
-      path    = "/"
+      path    = "/static/{object*}"
       methods = ["GET", "HEAD"]
     }
 
     routes {
       backend {
         type                       = "HTTP_BACKEND"
-        url                        = "https://${oci_objectstorage_bucket.website.namespace}.objectstorage.${var.region}.oci.customer-oci.com/n/${oci_objectstorage_bucket.website.namespace}/b/${oci_objectstorage_bucket.website.name}/o/$${request.path[object]}"
+        url                        = "${local.bucket_url}/o/index.html"
         connect_timeout_in_seconds = 2
       }
       path    = "/{object*}"
