@@ -10,3 +10,13 @@
 | Name      | Version | Used to                   |
 | --------- | ------- | ------------------------- |
 | Terraform | `1.5.3` | deploy the infrastructure |
+
+
+## Useful commands
+
+- Redeploy container
+
+  ```shell
+  $ terraform -chdir=terraform destroy --target oci_container_instances_container_instance.app
+  $ terraform -chdir=terraform apply --target oci_container_instances_container_instance.app
+  ```

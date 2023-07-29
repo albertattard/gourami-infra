@@ -237,16 +237,6 @@ resource "oci_apigateway_deployment" "website" {
       methods = ["GET", "POST", "PUT", "HEAD"]
     }
 
-    # routes {
-    #   backend {
-    #     type                       = "HTTP_BACKEND"
-    #     url                        = "${local.bucket_url}/o/$${request.path[object]}"
-    #     connect_timeout_in_seconds = 2
-    #   }
-    #   path    = "/{object*}"
-    #   methods = ["GET", "HEAD"]
-    # }
-
     routes {
       backend {
         type                       = "HTTP_BACKEND"
@@ -254,6 +244,16 @@ resource "oci_apigateway_deployment" "website" {
         connect_timeout_in_seconds = 2
       }
       path    = "/static/{object*}"
+      methods = ["GET", "HEAD"]
+    }
+
+    routes {
+      backend {
+        type                       = "HTTP_BACKEND"
+        url                        = "${local.bucket_url}/o/favicon.ico"
+        connect_timeout_in_seconds = 2
+      }
+      path    = "/favicon.ico"
       methods = ["GET", "HEAD"]
     }
 
