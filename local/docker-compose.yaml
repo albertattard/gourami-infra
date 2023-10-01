@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  nginx:
+    container_name: gourami-nginx
+    image: "nginx"
+    volumes:
+    - ./nginx/conf.d:/etc/nginx/conf.d
+    ports:
+      - "8000:8000"
+  web:
+    container_name: gourami-web
+    image: "gourami-web:local"
+    # build:
+    #   context: ../../gourami-web
+    #   dockerfile: container/Dockerfile
+    ports:
+      - "3000:3000"
+  app:
+    container_name: gourami-app
+    image: "gourami-app:local"
+    # build:
+    #   context: ../../gourami-app
+    #   dockerfile: container/Dockerfile
+    ports:
+      - "8080:8080"
